@@ -2,12 +2,22 @@ from ConvAI_Database.db_utilities import connect_to_database, execute_and_return
 from multiprocessing import Process
 #from db_utilities import connect_to_database, execute_and_return_results
 import re
+import psycopg2
 
 conn1 = connect_to_database(1)
 conn2 = connect_to_database(2)
 
 remove_special_character01 = lambda a : a.replace("'","''")
 remove_multi_new_line_characters = lambda a : re.sub(r'(\n\s*)+\n', '\n\n', a)
+
+def check_connection_viability(conn, i: int):
+    try:
+        with conn.cursor() as c :
+            c.execute("SELECT 'SPACES-OVER-TABS' ; ")
+    except psycopg2.InterfaceError as oe:
+        print("Connection error : ", oe)
+        conn = connect_to_database(i)
+
 
 def register_user(user_id : str, username : str, email : str) -> int:
     '''
@@ -19,8 +29,12 @@ def register_user(user_id : str, username : str, email : str) -> int:
     Returns :
         int(0/-1) : whether the query execution was successful or not ( 0 : successful ; -1 : error)
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     INSERT_USER_DETAILS = """ INSERT INTO user_details( user_id, username, email) VALUES ('{}','{}','{}');"""
     r = -1
+
     #with connect_to_database(1) as conn :
     try:
         username = remove_special_character01(username)
@@ -46,8 +60,12 @@ def register_api_key(user_id : str, email : str, api_key : str) -> int:
     Returns :
         int(0/-1) : whether the query execution was successful or not ( 0 : successful ; -1 : error)
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     INSERT_NEW_API = """ INSERT INTO api_map( user_id, email, api_key) VALUES ('{}','{}','{}'); """
     r = -1
+    
     #with connect_to_database(1) as conn :
     try:
         email = remove_special_character01(email)
@@ -74,6 +92,9 @@ def log_user_activity(api_key : str, service_accessed : str, source : str, user_
     Returns :
         int(0/-1)            : whether the query execution was successful or not ( 0 : successful ; -1 : error)
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     INSERT_USER_ACTIVITY = """ INSERT INTO user_activity( api_key, service_accessed, source, input) VALUES ('{}','{}','{}','{}'); """
     r = -1
     #with connect_to_database(1) as conn:
@@ -103,6 +124,9 @@ def get_api_key_info(email : str) -> str:
         str     : returns the latest api_key registered against the email id;
                   will return -1 in-case no api_key found in the database
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     GET_API_KEY_DETAILS = """ SELECT api_key
                           FROM (SELECT api_key, generation_timestamp AS gt FROM api_map WHERE email = '{}' ORDER BY gt DESC) AS S
                           LIMIT 1; """
@@ -134,6 +158,9 @@ def user_login(email : str) -> dict:
               Havent removed it in the current build as not sure whether which function is being used in the middleman script.
               Will remove in the future iteration.
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     GET_API_KEY_DETAILS = """ SELECT api_key
                           FROM (SELECT api_key, generation_timestamp AS gt FROM api_map WHERE email = '{}' ORDER BY gt DESC) AS S
                           LIMIT 1; """
@@ -161,6 +188,9 @@ def check_apiKey_existence(api_key : str) -> int:
     Returns :
         int     : returns 0 in-case the api_key is found in the database else will return -1
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     r = -1 
     CHECK_API_KEY_EXISTENCE = """ SELECT * FROM api_map WHERE api_key = '{}';"""
     #with connect_to_database(1) as conn:
@@ -185,6 +215,9 @@ def get_all_personal_characters(user_id : str) -> list:
         list     : returns list of dictionaries for all the characters owned by the user_id
                    if no results are found, will return empty list
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     data = []
     RETRIEVE_PERSONAL_CHARACTERS = """ SELECT * FROM all_characters WHERE user_id='{}' ; """
 
@@ -210,6 +243,9 @@ def get_character_details(char_id : str) -> dict:
         dict     : returns a dict consisting of the character details
                    if no results are found, will return {"status":-1}
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     data = {"status":-1}
     RETRIEVE_CHARACTER_DETAILS = """ SELECT * FROM all_characters WHERE character_id='{}' ; """
 
@@ -235,6 +271,9 @@ def get_doc_store_file_link(char_id : str) -> str:
         str       : the link to the doc store file ;
                     incase no results were found, return "-1"
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     RETRIEVE_GET_DOCSTORE_FILE_LINK = """ SELECT document_store_file_link FROM character_metadata WHERE character_id='{}' AND version = 0 ;"""
     doc_store_file_link = "-1"
     #with connect_to_database(1) as conn:
@@ -260,6 +299,9 @@ def get_all_characters_from_collection(collection_name : str) -> list:
         list              : list of dictionaries consisting of character details;
                             incase no results were found, return empty list
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     RETRIEVE_GET_ALL_CHARACTERS_FROM_COLLECTION = """ SELECT * FROM all_characters WHERE collection_name = '{}' ; """
     data = []
     #with connect_to_database(1) as conn:
@@ -283,6 +325,9 @@ def get_all_character_collections() -> list:
         list              : list of dictionaries consisting of character details;
                             incase no results were found, return empty list
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     RETRIEVE_COLLECTION_STATS = """ SELECT * FROM character_collections; """
     data = []
     #with connect_to_database(1) as conn:
@@ -306,6 +351,9 @@ def get_username(user_id : str) -> str:
         str       : the username for the provided user_id;
                     incase no results were found, return "-1"
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     username = "-1"
     RETRIEVE_USERNAME = """ SELECT username FROM user_details WHERE user_id='{}' ;"""
     #with connect_to_database(1) as conn:
@@ -357,6 +405,8 @@ def insert_new_character(
         str       : the character id for the new character;
                     incase no results were found, return "-1"
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
 
     char_id = "-1"
     
@@ -403,6 +453,9 @@ def get_user_count() -> int:
     Returns   :
         int       : total number of registered users
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     usercount = -1
     RETRIEVE_USER_COUNT = """ SELECT COUNT(user_id) AS usercount FROM user_details  ;"""
     #with connect_to_database(1) as conn:
@@ -429,6 +482,9 @@ def insert_feedback(username : str, user_email : str, rating : str, feedback : s
     Returns :
         int(0/-1) : whether the query execution was successful or not ( 0 : successful ; -1 : error)
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     INSERT_FEEDBACK= """ INSERT INTO feedback_data (username, usermail, rating, feedback, page) VALUES ('{}', '{}', '{}', '{}', '{}');"""
     r = -1
     #with connect_to_database(1) as conn :
@@ -459,6 +515,9 @@ def update_character_metadata(char_id : str, backstory : str, doc_store_file_lin
     Returns :
         int(0/-1) : whether the query execution was successful or not ( 0 : successful ; -1 : error)
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     INSERT_BACKSTORY= """  CALL update_backstory_version_charactermetadata(input_character_id => '{}'::uuid);
                            INSERT INTO character_metadata (character_id, backstory, document_store_file_link, characteristics ) VALUES ('{}','{}','{}','{}');"""
     if isinstance(characteristics, list):
@@ -490,6 +549,9 @@ def update_character_details(updated_data_dict : dict ) -> int :
     Returns :
        int(0/-1) : whether the query execution was successful or not ( 0 : successful ; -1 : error)
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     r = -1
     UPDATE_CHARACTER_DETAILS = """ UPDATE all_characters 
                                    SET character_name = '{}', 
@@ -551,6 +613,9 @@ def add_new_word(username : str, api_key : str, word : str, pronunciation : str,
     Returns :
         int(0/-1) : whether the query execution was successful or not ( 0 : successful ; -1 : error)
     '''
+    global conn2
+    check_connection_viability(conn2, 2)
+
     INSERT_WORD_FINETUNING = """ INSERT INTO word_finetuning( username, api_key, word, pronunciation, status ) VALUES ('{}', '{}', '{}', '{}', '{}');"""
     r = -1
 
@@ -582,6 +647,9 @@ def update_status_wordtuning(status : str, api_key : str, word : str) -> int:
     Returns :
         int(0/-1) : whether the query execution was successful or not ( 0 : successful ; -1 : error)
     '''
+    global conn2
+    check_connection_viability(conn2, 2)
+
     UPDATE_STATUS_WORD_FINETUNING = """ UPDATE word_finetuning SET status = '{}' WHERE api_key = '{}' AND word = '{}';"""
     r = -1
     #with connect_to_database(2) as conn :
@@ -609,6 +677,9 @@ def fetch_word_list(api_key : str) -> list:
     Returns :
         list : list of boosted words, if none found, would return empty list
     '''
+    global conn2
+    check_connection_viability(conn2, 1)
+
     GET_WORD_LIST_FOR_API_KEY = """SELECT word FROM word_finetuning WHERE api_key = '{}' ;"""
     r = []
     #with connect_to_database(2) as conn :
@@ -633,6 +704,9 @@ def get_character_name(char_id : str) -> str:
     Returns :
         str                    : character name, will return -1 if not found
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     r = "-1"
     GET_CHARACTER_NAME = """ SELECT  character_name FROM all_characters WHERE character_id = '{}' ;"""
     #with connect_to_database(1) as conn :
@@ -656,6 +730,9 @@ def get_user_ID(api_key : str) -> str:
     Returns :
         str                    : user id, will return -1 if not found
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     r = "-1"
     RETRIEVE_USERID = """ SELECT user_id FROM api_map WHERE api_key = '{}'; """
     #with connect_to_database(1) as conn :
@@ -683,6 +760,9 @@ def write_to_chat_history(char_id : str, user_id : str, user_query: str, bot_tex
     Returns :
         int(0/-1) : whether the query execution was successful or not ( 0 : successful ; -1 : error)
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     INSERT_CHARACTER_CHAT = """ INSERT INTO all_interactions 
                                  (user_id, character_id, session_id, user_query, response) 
                                  VALUES 
@@ -718,6 +798,9 @@ def get_chat_history(char_id : str, user_id : str, session_id : str = "-1",from_
     Returns :
         list : list of dictionaries, consisiting details for the chat logs. Will return empty list if none found.
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     r = []
 
     GET_CHAT_HISTORY    = """ SELECT * FROM all_interactions WHERE user_id='{}' AND character_id='{}'  """
@@ -752,6 +835,9 @@ def get_backstory(char_id : str) -> str:
     Returns :
         str : will return the character's backstory as a string , if not found will return -1
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     r = "-1"
     GET_CHARACTER_BACKSTORY = """ SELECT backstory FROM character_metadata WHERE character_id = '{}' AND version=0;"""
     #with connect_to_database(1) as conn :
@@ -775,6 +861,9 @@ def delete_new_user(email : str)->str:
     Returns:
         str : "SUCCESS" / "ERROR: <>"
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     DELETE_USER = """ DELETE FROM user_details WHERE email = '{}';"""
     #with connect_to_database(1) as conn :
     try:
@@ -828,6 +917,9 @@ def delete_char_ID(char_id : str) -> str :
             "SUCCESS" : the character is deleted
             "ERROR : <error message>" : error encountered during the operation 
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     DELETE_CHARACTER = """ DELETE FROM all_characters WHERE character_id = '{}';"""
     #with connect_to_database(1) as conn :
     try:
@@ -850,6 +942,9 @@ def get_username_from_apiKey(apiKey : str)-> str :
     Returns :
         str : will return the corresponding username else -1
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     GET_USERNAME = """ SELECT username FROM user_details WHERE user_id = (SELECT user_id FROM api_map WHERE api_key = '{}'); """
     r = "-1"
     #with connect_to_database(1) as conn :
@@ -872,6 +967,9 @@ def get_voice_for_character(charID : str)-> str :
         str : the voice of the character
         by default will return -1 (in case of any exception)
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     GET_CHARACTER_VOICE = """ SELECT voice_type FROM all_characters WHERE character_id = '{}';"""
     r = "-1"
     #with connect_to_database(1) as conn :
@@ -893,6 +991,9 @@ def get_character_actions(charID : str) -> list :
     Returns:
         list : list of actions available for the character. If none are present, will return empty list.
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+
     GET_CHARACTER_ACTIONS = """ SELECT character_actions FROM all_characters WHERE character_id = '{}';"""
     r = []
     #with connect_to_database(1) as conn :
@@ -923,6 +1024,9 @@ def insert_interaction_prompt_data(prompt : str, temperature : float, max_tokens
     Returns:
         int : -1 if failed else 0
     '''
+    global conn1
+    check_connection_viability(conn1, 1)
+    
     INSERT_RECORD = """ INSERT into interaction_prompt_data (prompt, model, engine, temperature, max_tokens, top_p, frequency_penalty, presence_penalty, stop, response) VALUES ('{}','{}','{}', {}, {}, {}, {}, {}, '{}', '{}'); """
     r = -1
     #with connect_to_database(1) as conn :
