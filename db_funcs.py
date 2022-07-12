@@ -3,6 +3,9 @@ from multiprocessing import Process
 #from db_utilities import connect_to_database, execute_and_return_results
 import re
 
+conn1 = connect_to_database(1)
+conn2 = connect_to_database(2)
+
 remove_special_character01 = lambda a : a.replace("'","''")
 remove_multi_new_line_characters = lambda a : re.sub(r'(\n\s*)+\n', '\n\n', a)
 
@@ -18,19 +21,19 @@ def register_user(user_id : str, username : str, email : str) -> int:
     '''
     INSERT_USER_DETAILS = """ INSERT INTO user_details( user_id, username, email) VALUES ('{}','{}','{}');"""
     r = -1
-    with connect_to_database(1) as conn :
-        try:
-            username = remove_special_character01(username)
-            email = remove_special_character01(email)
-            query = INSERT_USER_DETAILS.format(user_id,username,email)
-            cursor_obj = conn.cursor()
-            cursor_obj.execute(query)
-            cursor_obj.close()
-            #print("Query executed successfully")
-            r = 0
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for register_user : ",e) 
+    #with connect_to_database(1) as conn :
+    try:
+        username = remove_special_character01(username)
+        email = remove_special_character01(email)
+        query = INSERT_USER_DETAILS.format(user_id,username,email)
+        cursor_obj = conn1.cursor()
+        cursor_obj.execute(query)
+        cursor_obj.close()
+        #print("Query executed successfully")
+        r = 0
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for register_user : ",e) 
     return r
 
 def register_api_key(user_id : str, email : str, api_key : str) -> int:
@@ -45,18 +48,18 @@ def register_api_key(user_id : str, email : str, api_key : str) -> int:
     '''
     INSERT_NEW_API = """ INSERT INTO api_map( user_id, email, api_key) VALUES ('{}','{}','{}'); """
     r = -1
-    with connect_to_database(1) as conn :
-        try:
-            email = remove_special_character01(email)
-            query = INSERT_NEW_API.format(user_id,email, api_key)
-            cursor_obj = conn.cursor()
-            cursor_obj.execute(query)
-            cursor_obj.close()
-            #print("Query executed successfully")
-            r = 0
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for register_api_key : ",e)
+    #with connect_to_database(1) as conn :
+    try:
+        email = remove_special_character01(email)
+        query = INSERT_NEW_API.format(user_id,email, api_key)
+        cursor_obj = conn1.cursor()
+        cursor_obj.execute(query)
+        cursor_obj.close()
+        #print("Query executed successfully")
+        r = 0
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for register_api_key : ",e)
             
     return r
 
@@ -73,21 +76,21 @@ def log_user_activity(api_key : str, service_accessed : str, source : str, user_
     '''
     INSERT_USER_ACTIVITY = """ INSERT INTO user_activity( api_key, service_accessed, source, input) VALUES ('{}','{}','{}','{}'); """
     r = -1
-    with connect_to_database(1) as conn:
-        try:
-            user_input = remove_special_character01(user_input)
-            source = remove_special_character01(source)
-            service_accessed = remove_special_character01(service_accessed)
-            
-            query = INSERT_USER_ACTIVITY.format(api_key, service_accessed, source, user_input)
-            cursor_obj = conn.cursor()
-            cursor_obj.execute(query)
-            cursor_obj.close()
-            #print("Query executed successfully")
-            r = 0
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for log_user_activity : ",e)
+    #with connect_to_database(1) as conn:
+    try:
+        user_input = remove_special_character01(user_input)
+        source = remove_special_character01(source)
+        service_accessed = remove_special_character01(service_accessed)
+        
+        query = INSERT_USER_ACTIVITY.format(api_key, service_accessed, source, user_input)
+        cursor_obj = conn1.cursor()
+        cursor_obj.execute(query)
+        cursor_obj.close()
+        #print("Query executed successfully")
+        r = 0
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for log_user_activity : ",e)
             
     return r
 
@@ -104,17 +107,17 @@ def get_api_key_info(email : str) -> str:
                           FROM (SELECT api_key, generation_timestamp AS gt FROM api_map WHERE email = '{}' ORDER BY gt DESC) AS S
                           LIMIT 1; """
     api_key = "-1"
-    with connect_to_database(1) as conn:
-        try :
-            email = remove_special_character01(email)
-            query = GET_API_KEY_DETAILS.format(email)
-            query_results = execute_and_return_results(query, conn)
-        
-            if len(query_results) > 0:
-                api_key = str(query_results[0]['api_key'])
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_api_key_info : ",e)
+    #with connect_to_database(1) as conn:
+    try :
+        email = remove_special_character01(email)
+        query = GET_API_KEY_DETAILS.format(email)
+        query_results = execute_and_return_results(query, conn1)
+    
+        if len(query_results) > 0:
+            api_key = str(query_results[0]['api_key'])
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_api_key_info : ",e)
     
     return api_key
 
@@ -135,18 +138,18 @@ def user_login(email : str) -> dict:
                           FROM (SELECT api_key, generation_timestamp AS gt FROM api_map WHERE email = '{}' ORDER BY gt DESC) AS S
                           LIMIT 1; """
     api_key = {"apiKey":-1}
-    with connect_to_database(1) as conn:
-        try :
-            email = remove_special_character01(email)
-            query = GET_API_KEY_DETAILS.format(email)
-            query_results = execute_and_return_results(query, conn)
-        
-            if len(query_results) > 0:
-                api_key['apiKey'] = query_results[0]['api_key']
+    #with connect_to_database(1) as conn:
+    try :
+        email = remove_special_character01(email)
+        query = GET_API_KEY_DETAILS.format(email)
+        query_results = execute_and_return_results(query, conn1)
+    
+        if len(query_results) > 0:
+            api_key['apiKey'] = query_results[0]['api_key']
 
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for user_login : ",e)
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for user_login : ",e)
     
     return api_key
 
@@ -160,16 +163,16 @@ def check_apiKey_existence(api_key : str) -> int:
     '''
     r = -1 
     CHECK_API_KEY_EXISTENCE = """ SELECT * FROM api_map WHERE api_key = '{}';"""
-    with connect_to_database(1) as conn:
-        try :
-            query = CHECK_API_KEY_EXISTENCE.format(api_key)
-            query_results = execute_and_return_results(query, conn)
-        
-            if len(query_results) > 0:
-                r = 0
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for check_apiKey_existence : ",e)
+    #with connect_to_database(1) as conn:
+    try :
+        query = CHECK_API_KEY_EXISTENCE.format(api_key)
+        query_results = execute_and_return_results(query, conn1)
+    
+        if len(query_results) > 0:
+            r = 0
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for check_apiKey_existence : ",e)
             
     return r
 
@@ -185,16 +188,16 @@ def get_all_personal_characters(user_id : str) -> list:
     data = []
     RETRIEVE_PERSONAL_CHARACTERS = """ SELECT * FROM all_characters WHERE user_id='{}' ; """
 
-    with connect_to_database(1) as conn:
-        try :
-            query = RETRIEVE_PERSONAL_CHARACTERS.format(user_id)
-            query_results = execute_and_return_results(query, conn)
-        
-            if len(query_results) > 0:
-                data = query_results
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_all_personal_characters : ",e)
+    #with connect_to_database(1) as conn:
+    try :
+        query = RETRIEVE_PERSONAL_CHARACTERS.format(user_id)
+        query_results = execute_and_return_results(query, conn1)
+    
+        if len(query_results) > 0:
+            data = query_results
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_all_personal_characters : ",e)
             
     return data
 
@@ -210,16 +213,16 @@ def get_character_details(char_id : str) -> dict:
     data = {"status":-1}
     RETRIEVE_CHARACTER_DETAILS = """ SELECT * FROM all_characters WHERE character_id='{}' ; """
 
-    with connect_to_database(1) as conn:
-        try :
-            query = RETRIEVE_CHARACTER_DETAILS.format(char_id)
-            query_results = execute_and_return_results(query,conn)
-        
-            if len(query_results) > 0:
-                data = query_results[0]
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_character_details : ",e)
+    #with connect_to_database(1) as conn:
+    try :
+        query = RETRIEVE_CHARACTER_DETAILS.format(char_id)
+        query_results = execute_and_return_results(query,conn1)
+    
+        if len(query_results) > 0:
+            data = query_results[0]
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_character_details : ",e)
 
     return data
 
@@ -234,18 +237,18 @@ def get_doc_store_file_link(char_id : str) -> str:
     '''
     RETRIEVE_GET_DOCSTORE_FILE_LINK = """ SELECT document_store_file_link FROM character_metadata WHERE character_id='{}' AND version = 0 ;"""
     doc_store_file_link = "-1"
-    with connect_to_database(1) as conn:
-        try:   
-            query = RETRIEVE_GET_DOCSTORE_FILE_LINK.format(char_id)
-            query_results = execute_and_return_results(query,conn)
+    #with connect_to_database(1) as conn:
+    try:   
+        query = RETRIEVE_GET_DOCSTORE_FILE_LINK.format(char_id)
+        query_results = execute_and_return_results(query,conn1)
 
-            if len(query_results) > 0:
-                doc_store_file_link = query_results[0]["document_store_file_link"]
-            
-            #if doc_store_file_link == '-1' or len(query_results)==0:
-            #        raise ValueError('Doc store file link not available!')
-        except Exception as e:
-            raise Exception("Error in executing the query for get_doc_store_file_link : ",e)
+        if len(query_results) > 0:
+            doc_store_file_link = query_results[0]["document_store_file_link"]
+        
+        #if doc_store_file_link == '-1' or len(query_results)==0:
+        #        raise ValueError('Doc store file link not available!')
+    except Exception as e:
+        raise Exception("Error in executing the query for get_doc_store_file_link : ",e)
     return doc_store_file_link
 
 def get_all_characters_from_collection(collection_name : str) -> list:
@@ -259,17 +262,17 @@ def get_all_characters_from_collection(collection_name : str) -> list:
     '''
     RETRIEVE_GET_ALL_CHARACTERS_FROM_COLLECTION = """ SELECT * FROM all_characters WHERE collection_name = '{}' ; """
     data = []
-    with connect_to_database(1) as conn:
-        try:
-            collection_name = remove_special_character01(collection_name)   
-            query = RETRIEVE_GET_ALL_CHARACTERS_FROM_COLLECTION.format(collection_name)
-            query_results = execute_and_return_results(query,conn)
+    #with connect_to_database(1) as conn:
+    try:
+        collection_name = remove_special_character01(collection_name)   
+        query = RETRIEVE_GET_ALL_CHARACTERS_FROM_COLLECTION.format(collection_name)
+        query_results = execute_and_return_results(query,conn1)
 
-            if len(query_results) > 0:
-                data = query_results
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_all_characters_from_collection : ",e)
+        if len(query_results) > 0:
+            data = query_results
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_all_characters_from_collection : ",e)
     return data
 
 def get_all_character_collections() -> list:
@@ -282,16 +285,16 @@ def get_all_character_collections() -> list:
     '''
     RETRIEVE_COLLECTION_STATS = """ SELECT * FROM character_collections; """
     data = []
-    with connect_to_database(1) as conn:
-        try:   
-            query = RETRIEVE_COLLECTION_STATS
-            query_results = execute_and_return_results(query,conn)
+    #with connect_to_database(1) as conn:
+    try:   
+        query = RETRIEVE_COLLECTION_STATS
+        query_results = execute_and_return_results(query,conn1)
 
-            if len(query_results) > 0:
-                data = query_results
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_all_character_collections : ",e)
+        if len(query_results) > 0:
+            data = query_results
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_all_character_collections : ",e)
     return data
 
 def get_username(user_id : str) -> str:
@@ -305,16 +308,16 @@ def get_username(user_id : str) -> str:
     '''
     username = "-1"
     RETRIEVE_USERNAME = """ SELECT username FROM user_details WHERE user_id='{}' ;"""
-    with connect_to_database(1) as conn:
-        try:   
-            query = RETRIEVE_USERNAME.format(user_id)
-            query_results = execute_and_return_results(query,conn)
+    #with connect_to_database(1) as conn:
+    try:   
+        query = RETRIEVE_USERNAME.format(user_id)
+        query_results = execute_and_return_results(query,conn1)
 
-            if len(query_results) > 0:
-                username = query_results[0]["username"]
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_username : ",e)
+        if len(query_results) > 0:
+            username = query_results[0]["username"]
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_username : ",e)
     return username
 
 def insert_new_character(
@@ -366,30 +369,30 @@ def insert_new_character(
                                                  ORDER BY timestamp DESC; """
     
 
-    with connect_to_database(1) as conn:
-        try:
-            state_names = [remove_special_character01(state) for state in state_names]
-            character_actions = [remove_special_character01(action) for action in character_actions]
+    #with connect_to_database(1) as conn:
+    try:
+        state_names = [remove_special_character01(state) for state in state_names]
+        character_actions = [remove_special_character01(action) for action in character_actions]
 
-            state_names = "{" + ",".join(state_names) + "}"
-            state_links = "{" + ",".join(state_links) + "}"
-            character_actions = "{" + ",".join(character_actions) + "}"
-            
-            character_name = remove_special_character01(character_name)
-            collection_name = remove_special_character01(collection_name)
+        state_names = "{" + ",".join(state_names) + "}"
+        state_links = "{" + ",".join(state_links) + "}"
+        character_actions = "{" + ",".join(character_actions) + "}"
+        
+        character_name = remove_special_character01(character_name)
+        collection_name = remove_special_character01(collection_name)
 
-            query01 = INSERT_CHARACTER_INTO_ALLCHARACTERS.format(character_name, collection_name, user_id, model_type, state_names, state_links, listing, voice_type, voice_pitch, blockchain, contract_address, mint_address, owner_address, character_actions)
-            with conn.cursor() as cursor_obj:
-                cursor_obj.execute(query01)
-            
-            query02 = RETRIEVE_CHARACTERID_FROM_ALLCHARACTERS.format(character_name, user_id, collection_name)
-            query_results = execute_and_return_results(query02,conn)
+        query01 = INSERT_CHARACTER_INTO_ALLCHARACTERS.format(character_name, collection_name, user_id, model_type, state_names, state_links, listing, voice_type, voice_pitch, blockchain, contract_address, mint_address, owner_address, character_actions)
+        with conn1.cursor() as cursor_obj:
+            cursor_obj.execute(query01)
+        
+        query02 = RETRIEVE_CHARACTERID_FROM_ALLCHARACTERS.format(character_name, user_id, collection_name)
+        query_results = execute_and_return_results(query02,conn1)
 
-            if len(query_results) > 0:
-                char_id = query_results[0]["character_id"]
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for insert_new_character : ",e)
+        if len(query_results) > 0:
+            char_id = query_results[0]["character_id"]
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for insert_new_character : ",e)
         
     return char_id
 
@@ -402,16 +405,16 @@ def get_user_count() -> int:
     '''
     usercount = -1
     RETRIEVE_USER_COUNT = """ SELECT COUNT(user_id) AS usercount FROM user_details  ;"""
-    with connect_to_database(1) as conn:
-        try:   
-            query = RETRIEVE_USER_COUNT
-            query_results = execute_and_return_results(query,conn)
+    #with connect_to_database(1) as conn:
+    try:   
+        query = RETRIEVE_USER_COUNT
+        query_results = execute_and_return_results(query,conn1)
 
-            if len(query_results) > 0:
-                usercount = int(query_results[0]["usercount"])
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_user_count : ",e)
+        if len(query_results) > 0:
+            usercount = int(query_results[0]["usercount"])
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_user_count : ",e)
     return usercount
 
 def insert_feedback(username : str, user_email : str, rating : str, feedback : str, page : str) -> int:
@@ -428,20 +431,20 @@ def insert_feedback(username : str, user_email : str, rating : str, feedback : s
     '''
     INSERT_FEEDBACK= """ INSERT INTO feedback_data (username, usermail, rating, feedback, page) VALUES ('{}', '{}', '{}', '{}', '{}');"""
     r = -1
-    with connect_to_database(1) as conn :
-        try:
-            feedback = remove_special_character01(feedback)
-            user_email = remove_special_character01(user_email)
+    #with connect_to_database(1) as conn :
+    try:
+        feedback = remove_special_character01(feedback)
+        user_email = remove_special_character01(user_email)
 
-            query = INSERT_FEEDBACK.format(username, user_email, rating, feedback, page)
-            cursor_obj = conn.cursor()
-            cursor_obj.execute(query)
-            cursor_obj.close()
-            #print("Query executed successfully")
-            r = 0
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for insert_feedback : ",e)
+        query = INSERT_FEEDBACK.format(username, user_email, rating, feedback, page)
+        cursor_obj = conn1.cursor()
+        cursor_obj.execute(query)
+        cursor_obj.close()
+        #print("Query executed successfully")
+        r = 0
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for insert_feedback : ",e)
             
     return r
 
@@ -463,19 +466,19 @@ def update_character_metadata(char_id : str, backstory : str, doc_store_file_lin
         characteristics = "{" + ",".join(characteristics) + "}"
 
     r = -1
-    with connect_to_database(1) as conn :
-        try:
-            backstory = remove_special_character01(backstory)
+    #with connect_to_database(1) as conn :
+    try:
+        backstory = remove_special_character01(backstory)
 
-            query = INSERT_BACKSTORY.format(char_id, char_id, backstory, doc_store_file_link, characteristics)
-            cursor_obj = conn.cursor()
-            cursor_obj.execute(query)
-            cursor_obj.close()
-            #print("Query executed successfully")
-            r = 0
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for update_character_backstory : ",e)
+        query = INSERT_BACKSTORY.format(char_id, char_id, backstory, doc_store_file_link, characteristics)
+        cursor_obj = conn1.cursor()
+        cursor_obj.execute(query)
+        cursor_obj.close()
+        #print("Query executed successfully")
+        r = 0
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for update_character_backstory : ",e)
             
     return r
 
@@ -505,34 +508,34 @@ def update_character_details(updated_data_dict : dict ) -> int :
                                        character_actions = '{}' 
                                    WHERE character_id = '{}'; """
     
-    with connect_to_database(1) as conn:
-        try:
-            updated_data_dict['character_name'] = remove_special_character01(updated_data_dict['character_name'])
-            updated_data_dict['collection_name'] = remove_special_character01(updated_data_dict['collection_name'])
-                                                    
-                                                    
-            if isinstance(updated_data_dict["state_links"], list):
-                updated_data_dict["state_links"] = "{" + ",".join(updated_data_dict["state_links"]) + "}"
+    #with connect_to_database(1) as conn:
+    try:
+        updated_data_dict['character_name'] = remove_special_character01(updated_data_dict['character_name'])
+        updated_data_dict['collection_name'] = remove_special_character01(updated_data_dict['collection_name'])
+                                                
+                                                
+        if isinstance(updated_data_dict["state_links"], list):
+            updated_data_dict["state_links"] = "{" + ",".join(updated_data_dict["state_links"]) + "}"
+        
+        if isinstance(updated_data_dict["character_actions"], list):
+            updated_data_dict["character_actions"] = "{" + ",".join(updated_data_dict["character_actions"]) + "}"
             
-            if isinstance(updated_data_dict["character_actions"], list):
-                updated_data_dict["character_actions"] = "{" + ",".join(updated_data_dict["character_actions"]) + "}"
-                
-            if isinstance(updated_data_dict["state_names"], list):
-                updated_data_dict["state_names"] = [remove_special_character01(state) for state in updated_data_dict["state_names"]]
-                updated_data_dict["state_names"] = "{" + ",".join(updated_data_dict["state_names"]) + "}"
+        if isinstance(updated_data_dict["state_names"], list):
+            updated_data_dict["state_names"] = [remove_special_character01(state) for state in updated_data_dict["state_names"]]
+            updated_data_dict["state_names"] = "{" + ",".join(updated_data_dict["state_names"]) + "}"
 
-            query = UPDATE_CHARACTER_DETAILS.format(updated_data_dict['character_name'], updated_data_dict['collection_name'], 
-                                                    updated_data_dict['user_id'],updated_data_dict['model_type'],updated_data_dict['state_names'],
-                                                    updated_data_dict['state_links'], updated_data_dict['listing'], updated_data_dict['voice_type'], 
-                                                    updated_data_dict['voice_pitch'], updated_data_dict['blockchain'], updated_data_dict['contract_address'], 
-                                                    updated_data_dict['mint_address'], updated_data_dict['owner_address'], updated_data_dict['character_actions'], updated_data_dict['character_id'])
-            cursor_obj = conn.cursor()
-            cursor_obj.execute(query)
-            cursor_obj.close()
-            r =0
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for update_character_details : ",e)
+        query = UPDATE_CHARACTER_DETAILS.format(updated_data_dict['character_name'], updated_data_dict['collection_name'], 
+                                                updated_data_dict['user_id'],updated_data_dict['model_type'],updated_data_dict['state_names'],
+                                                updated_data_dict['state_links'], updated_data_dict['listing'], updated_data_dict['voice_type'], 
+                                                updated_data_dict['voice_pitch'], updated_data_dict['blockchain'], updated_data_dict['contract_address'], 
+                                                updated_data_dict['mint_address'], updated_data_dict['owner_address'], updated_data_dict['character_actions'], updated_data_dict['character_id'])
+        cursor_obj = conn1.cursor()
+        cursor_obj.execute(query)
+        cursor_obj.close()
+        r =0
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for update_character_details : ",e)
         
     return r
 
@@ -551,21 +554,21 @@ def add_new_word(username : str, api_key : str, word : str, pronunciation : str,
     INSERT_WORD_FINETUNING = """ INSERT INTO word_finetuning( username, api_key, word, pronunciation, status ) VALUES ('{}', '{}', '{}', '{}', '{}');"""
     r = -1
 
-    with connect_to_database(2) as conn :
-        try:
-            word = remove_special_character01(word)
-            pronunciation = remove_special_character01(pronunciation)
-            status = remove_special_character01(status)
+    #with connect_to_database(2) as conn :
+    try:
+        word = remove_special_character01(word)
+        pronunciation = remove_special_character01(pronunciation)
+        status = remove_special_character01(status)
 
-            query = INSERT_WORD_FINETUNING.format(username, api_key, word, pronunciation, status)
-            cursor_obj = conn.cursor()
-            cursor_obj.execute(query)
-            cursor_obj.close()
-            #print("Query executed successfully")
-            r = 0
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for add_new_word : ",e)
+        query = INSERT_WORD_FINETUNING.format(username, api_key, word, pronunciation, status)
+        cursor_obj = conn2.cursor()
+        cursor_obj.execute(query)
+        cursor_obj.close()
+        #print("Query executed successfully")
+        r = 0
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for add_new_word : ",e)
     
     return r
 
@@ -581,20 +584,20 @@ def update_status_wordtuning(status : str, api_key : str, word : str) -> int:
     '''
     UPDATE_STATUS_WORD_FINETUNING = """ UPDATE word_finetuning SET status = '{}' WHERE api_key = '{}' AND word = '{}';"""
     r = -1
-    with connect_to_database(2) as conn :
-        try:
-            status = remove_special_character01(status)
-            word = remove_special_character01(word)
+    #with connect_to_database(2) as conn :
+    try:
+        status = remove_special_character01(status)
+        word = remove_special_character01(word)
 
-            query = UPDATE_STATUS_WORD_FINETUNING.format(status, api_key, word)
-            cursor_obj = conn.cursor()
-            cursor_obj.execute(query)
-            cursor_obj.close()
-            #print("Query executed successfully")
-            r = 0
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for update_status_wordtuning : ",e)
+        query = UPDATE_STATUS_WORD_FINETUNING.format(status, api_key, word)
+        cursor_obj = conn2.cursor()
+        cursor_obj.execute(query)
+        cursor_obj.close()
+        #print("Query executed successfully")
+        r = 0
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for update_status_wordtuning : ",e)
     
     return r
 
@@ -608,17 +611,17 @@ def fetch_word_list(api_key : str) -> list:
     '''
     GET_WORD_LIST_FOR_API_KEY = """SELECT word FROM word_finetuning WHERE api_key = '{}' ;"""
     r = []
-    with connect_to_database(2) as conn :
-        try:
-            query = GET_WORD_LIST_FOR_API_KEY.format(api_key)
-            query_results = execute_and_return_results(query,conn)
-            #print("Query executed successfully")
-            if len(query_results)>0:
-                for i in query_results:
-                    r.append(i["word"])
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for fetch_word_list : ",e)
+    #with connect_to_database(2) as conn :
+    try:
+        query = GET_WORD_LIST_FOR_API_KEY.format(api_key)
+        query_results = execute_and_return_results(query,conn2)
+        #print("Query executed successfully")
+        if len(query_results)>0:
+            for i in query_results:
+                r.append(i["word"])
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for fetch_word_list : ",e)
     
     return r
 
@@ -632,16 +635,16 @@ def get_character_name(char_id : str) -> str:
     '''
     r = "-1"
     GET_CHARACTER_NAME = """ SELECT  character_name FROM all_characters WHERE character_id = '{}' ;"""
-    with connect_to_database(1) as conn :
-        try:
-            query = GET_CHARACTER_NAME.format(char_id)
-            query_results = execute_and_return_results(query,conn)
-            #print("Query executed successfully")
-            if len(query_results)>0:
-                r = query_results[0]["character_name"]
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_character_name : ",e)
+    #with connect_to_database(1) as conn :
+    try:
+        query = GET_CHARACTER_NAME.format(char_id)
+        query_results = execute_and_return_results(query,conn1)
+        #print("Query executed successfully")
+        if len(query_results)>0:
+            r = query_results[0]["character_name"]
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_character_name : ",e)
     
     return r
 
@@ -655,16 +658,16 @@ def get_user_ID(api_key : str) -> str:
     '''
     r = "-1"
     RETRIEVE_USERID = """ SELECT user_id FROM api_map WHERE api_key = '{}'; """
-    with connect_to_database(1) as conn :
-        try:
-            query = RETRIEVE_USERID.format(api_key)
-            query_results = execute_and_return_results(query,conn)
-            #print("Query executed successfully")
-            if len(query_results)>0:
-                r = query_results[0]["user_id"]
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_user_ID : ",e)
+    #with connect_to_database(1) as conn :
+    try:
+        query = RETRIEVE_USERID.format(api_key)
+        query_results = execute_and_return_results(query,conn1)
+        #print("Query executed successfully")
+        if len(query_results)>0:
+            r = query_results[0]["user_id"]
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_user_ID : ",e)
     
     return r
 
@@ -686,20 +689,20 @@ def write_to_chat_history(char_id : str, user_id : str, user_query: str, bot_tex
                                  ('{}', '{}', '{}', '{}', '{}'); """
     r = -1
 
-    with connect_to_database(1) as conn :
-        try:
-            user_query = remove_special_character01(user_query)
-            bot_text = remove_special_character01(bot_text)
+    #with connect_to_database(1) as conn :
+    try:
+        user_query = remove_special_character01(user_query)
+        bot_text = remove_special_character01(bot_text)
 
-            query = INSERT_CHARACTER_CHAT.format(user_id, char_id, session_id, user_query, bot_text)
-            cursor_obj = conn.cursor()
-            cursor_obj.execute(query)
-            cursor_obj.close()
-            #print("Query executed successfully")
-            r = 0
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for write_to_chat_history : ",e)
+        query = INSERT_CHARACTER_CHAT.format(user_id, char_id, session_id, user_query, bot_text)
+        cursor_obj = conn1.cursor()
+        cursor_obj.execute(query)
+        cursor_obj.close()
+        #print("Query executed successfully")
+        r = 0
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for write_to_chat_history : ",e)
 
     return r
 
@@ -721,24 +724,24 @@ def get_chat_history(char_id : str, user_id : str, session_id : str = "-1",from_
     GET_CHAT_HISTORY_02 = """ AND (timestamp BETWEEN '{}' AND '{}')"""
     GET_CHAT_HISTORY_03 = """ AND session_id='{}' """
     
-    with connect_to_database(1) as conn :
-        try:
-            query = GET_CHAT_HISTORY.format(user_id, char_id)
-      
-            if to_time!=-1 and to_time!="-1":
-                query = query + GET_CHAT_HISTORY_02.format(to_time,from_time) 
+    #with connect_to_database(1) as conn :
+    try:
+        query = GET_CHAT_HISTORY.format(user_id, char_id)
     
-            if session_id!=-1 and session_id!="-1":
-                query = query + GET_CHAT_HISTORY_03.format(session_id)
+        if to_time!=-1 and to_time!="-1":
+            query = query + GET_CHAT_HISTORY_02.format(to_time,from_time) 
 
-            query = query + ";"
-            query_results = execute_and_return_results(query,conn)
-            #print("Query executed successfully")
-            if len(query_results)>0:
-                r = query_results
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_chat_history : ",e)
+        if session_id!=-1 and session_id!="-1":
+            query = query + GET_CHAT_HISTORY_03.format(session_id)
+
+        query = query + ";"
+        query_results = execute_and_return_results(query,conn1)
+        #print("Query executed successfully")
+        if len(query_results)>0:
+            r = query_results
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_chat_history : ",e)
     return r
 
 def get_backstory(char_id : str) -> str:
@@ -751,16 +754,16 @@ def get_backstory(char_id : str) -> str:
     '''
     r = "-1"
     GET_CHARACTER_BACKSTORY = """ SELECT backstory FROM character_metadata WHERE character_id = '{}' AND version=0;"""
-    with connect_to_database(1) as conn :
-        try:
-            query = GET_CHARACTER_BACKSTORY.format(char_id)
-            query_results = execute_and_return_results(query,conn)
-            #print("Query executed successfully")
-            if len(query_results)>0:
-                r = query_results[0]["backstory"]
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_backstory : ",e)
+    #with connect_to_database(1) as conn :
+    try:
+        query = GET_CHARACTER_BACKSTORY.format(char_id)
+        query_results = execute_and_return_results(query,conn1)
+        #print("Query executed successfully")
+        if len(query_results)>0:
+            r = query_results[0]["backstory"]
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_backstory : ",e)
     
     return r
 
@@ -773,18 +776,18 @@ def delete_new_user(email : str)->str:
         str : "SUCCESS" / "ERROR: <>"
     '''
     DELETE_USER = """ DELETE FROM user_details WHERE email = '{}';"""
-    with connect_to_database(1) as conn :
-        try:
-            email = remove_special_character01(email)
-            query = DELETE_USER.format(email)
-            cursor_obj = conn.cursor()
-            cursor_obj.execute(query)
-            cursor_obj.close()
-            r = "SUCCESS"
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for delete_new_user : ",e)
-            r = """ ERROR: {} """.format(e)
+    #with connect_to_database(1) as conn :
+    try:
+        email = remove_special_character01(email)
+        query = DELETE_USER.format(email)
+        cursor_obj = conn1.cursor()
+        cursor_obj.execute(query)
+        cursor_obj.close()
+        r = "SUCCESS"
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for delete_new_user : ",e)
+        r = """ ERROR: {} """.format(e)
     return r
 
 def user_registration(uid, username, email, api_key) -> dict:
@@ -826,17 +829,17 @@ def delete_char_ID(char_id : str) -> str :
             "ERROR : <error message>" : error encountered during the operation 
     '''
     DELETE_CHARACTER = """ DELETE FROM all_characters WHERE character_id = '{}';"""
-    with connect_to_database(1) as conn :
-        try:
-            query = DELETE_CHARACTER.format(char_id)
-            cursor_obj = conn.cursor()
-            cursor_obj.execute(query)
-            cursor_obj.close()
-            r = "SUCCESS"
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for delete_character : ",e)
-            r = """ ERROR: {} """.format(e)
+    #with connect_to_database(1) as conn :
+    try:
+        query = DELETE_CHARACTER.format(char_id)
+        cursor_obj = conn1.cursor()
+        cursor_obj.execute(query)
+        cursor_obj.close()
+        r = "SUCCESS"
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for delete_character : ",e)
+        r = """ ERROR: {} """.format(e)
     return r
 
 def get_username_from_apiKey(apiKey : str)-> str :
@@ -849,15 +852,15 @@ def get_username_from_apiKey(apiKey : str)-> str :
     '''
     GET_USERNAME = """ SELECT username FROM user_details WHERE user_id = (SELECT user_id FROM api_map WHERE api_key = '{}'); """
     r = "-1"
-    with connect_to_database(1) as conn :
-        try:
-            query = GET_USERNAME.format(apiKey)
-            query_results = execute_and_return_results(query,conn)
-            if len(query_results)>0:
-                r = query_results[0]["username"]
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_username_from_apiKey : ",e)
+    #with connect_to_database(1) as conn :
+    try:
+        query = GET_USERNAME.format(apiKey)
+        query_results = execute_and_return_results(query,conn1)
+        if len(query_results)>0:
+            r = query_results[0]["username"]
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_username_from_apiKey : ",e)
     return r
 
 def get_voice_for_character(charID : str)-> str :
@@ -871,15 +874,15 @@ def get_voice_for_character(charID : str)-> str :
     '''
     GET_CHARACTER_VOICE = """ SELECT voice_type FROM all_characters WHERE character_id = '{}';"""
     r = "-1"
-    with connect_to_database(1) as conn :
-        try:
-            query = GET_CHARACTER_VOICE.format(charID)
-            query_results = execute_and_return_results(query,conn)
-            if len(query_results)>0:
-                r = query_results[0]["voice_type"]
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_voice_for_character : ",e)
+    #with connect_to_database(1) as conn :
+    try:
+        query = GET_CHARACTER_VOICE.format(charID)
+        query_results = execute_and_return_results(query,conn1)
+        if len(query_results)>0:
+            r = query_results[0]["voice_type"]
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_voice_for_character : ",e)
     return r
 
 def get_character_actions(charID : str) -> list :
@@ -892,15 +895,15 @@ def get_character_actions(charID : str) -> list :
     '''
     GET_CHARACTER_ACTIONS = """ SELECT character_actions FROM all_characters WHERE character_id = '{}';"""
     r = []
-    with connect_to_database(1) as conn :
-        try:
-            query = GET_CHARACTER_ACTIONS.format(charID)
-            query_results = execute_and_return_results(query,conn)
-            if len(query_results)>0:
-                r = query_results[0]["character_actions"]
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for get_character_actions : ",e)
+    #with connect_to_database(1) as conn :
+    try:
+        query = GET_CHARACTER_ACTIONS.format(charID)
+        query_results = execute_and_return_results(query,conn1)
+        if len(query_results)>0:
+            r = query_results[0]["character_actions"]
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for get_character_actions : ",e)
     return r
 
 def insert_interaction_prompt_data(prompt : str, temperature : float, max_tokens : int, top_p : float, frequency_penalty : float, presence_penalty : float, stop : str, response : str , model : str = 'NULL', engine : str = 'NULL') -> int :
@@ -922,24 +925,24 @@ def insert_interaction_prompt_data(prompt : str, temperature : float, max_tokens
     '''
     INSERT_RECORD = """ INSERT into interaction_prompt_data (prompt, model, engine, temperature, max_tokens, top_p, frequency_penalty, presence_penalty, stop, response) VALUES ('{}','{}','{}', {}, {}, {}, {}, {}, '{}', '{}'); """
     r = -1
-    with connect_to_database(1) as conn :
-        try:
-            prompt = remove_special_character01(prompt)
-            prompt = remove_multi_new_line_characters(prompt)
-            
-            model = remove_special_character01(model)
-            engine = remove_special_character01(engine)
-            stop = remove_special_character01(stop)
-            
-            response = remove_special_character01(response)
-            response = remove_multi_new_line_characters(response)
-            
-            query = INSERT_RECORD.format(prompt, model, engine, temperature, max_tokens, top_p, frequency_penalty, presence_penalty, stop, response)
-            cursor_obj = conn.cursor()
-            cursor_obj.execute(query)
-            cursor_obj.close()
-            r = 0
-        except Exception as e:
-            #print(query)
-            print("Error in executing the query for insert_interaction_prompt_data : ",e)
+    #with connect_to_database(1) as conn :
+    try:
+        prompt = remove_special_character01(prompt)
+        prompt = remove_multi_new_line_characters(prompt)
+        
+        model = remove_special_character01(model)
+        engine = remove_special_character01(engine)
+        stop = remove_special_character01(stop)
+        
+        response = remove_special_character01(response)
+        response = remove_multi_new_line_characters(response)
+        
+        query = INSERT_RECORD.format(prompt, model, engine, temperature, max_tokens, top_p, frequency_penalty, presence_penalty, stop, response)
+        cursor_obj = conn1.cursor()
+        cursor_obj.execute(query)
+        cursor_obj.close()
+        r = 0
+    except Exception as e:
+        #print(query)
+        print("Error in executing the query for insert_interaction_prompt_data : ",e)
     return r
